@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>이벤트</title>
+  </head>
+  <body>
+    <h2>이벤트</h2>
+    <button onclick="sayHello()">인사하기</button>
+    <button id="btn">누르세요</button>
+    <button id="eventbtn">이벤트 리스너 사용</button>
+
+    <script>
+      function sayHello() {
+        alert("안녕하세요!!");
+      }
+      const btn = document.getElementById("btn");
+      btn.onclick = function () {
+        alert("버튼이 클릭되었습니다!!"); //onclick이 될 때만 함수가 만들어졌다 소멸한다.
+      };
+      const eventbtn = document.getElementById("eventbtn");
+      eventbtn.addEventListener("click", function () {
+        alert("addEventListener로 연결된 이벤트입니다.");
+      }); //event를 특정 요소에 추가해 어떤 반응이 일어날 때 함수가 만들어져 실행되도록 대기시킨다.
+      //   좋은 점: 같은 버튼에 여러 이벤트를 대기시킬 수 있다.
+      eventbtn.addEventListener("mouseenter", function () {
+        eventbtn.style.backgroundColor = "deepskyblue";
+      });
+    </script>
+  </body>
+</html>

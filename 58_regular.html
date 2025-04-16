@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>정규식</title>
+  </head>
+  <body>
+    <script>
+      /*
+            /패턴/             -> 패턴이 고정되어 있을 때
+            new RexExp('패턴') -> 패턴을 변경하기 용이함. 확장성 있음
+        */
+
+      const regex = /apple/;
+
+      console.log(regex.test("I have an apple.")); //true
+      console.log(regex.test("I have an banana.")); //false
+
+      const text = "내 핸드폰 번호는 010-1234-5678 입니다.";
+      const result = text.match(/\d{3}-\d{4}-\d{4}/); // 패턴을 찾아 배열로 반환한다. \d: 정수 {}:자릿수  --> 정수로 3자리가 들어올 수 있다.
+      //   ---> 3자리 정수-4자리 정수-4자리 정수가 있다면 뽑아와 배열로 저장한다.
+      console.log(result[0]);
+
+      const word = "내 이름은 김사과입니다.";
+      const clean = word.replace(/김사과/, "****");
+      console.log(clean); //내 이름은 ****입니다.
+    </script>
+  </body>
+</html>

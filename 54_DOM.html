@@ -23,6 +23,7 @@
     <button onclick="updateFirst()">첫 번째만 바꾸기</button>
     <button onclick="addItem()">항목 추가</button>
     <button onclick="changeImage()">이미지 변경</button>
+    <button onclick="removeText()">삭제</button>
 
     <script>
       function changeText() {
@@ -54,9 +55,13 @@
       }
 
       function changeImage() {
-        function changeImage() {
-          document.getElementById("image");
-        }
+        document
+          .getElementById("image")
+          .setAttribute("src", "./img/parrot.png");
+      }
+
+      function removeText() {
+        document.getElementById("greting").remove();
       }
     </script>
   </body>
