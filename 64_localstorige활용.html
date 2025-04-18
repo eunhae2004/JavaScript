@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <button onclick="toggleTheme()">테마 변경</button>
+    <p>현재 테마: <span id="themeText"></span></p>
+
+    <script>
+      function applyTheme(theme) {
+        body.style.backgroundColor =
+          theme === "dark"
+            ? "#222"
+            : (body.style.color = theme === "dark" ? "#fff" : "#000");
+        document.getElementById("themeText").innerText = theme;
+      }
+
+      const body = document.body; //body 자체를 객체화 시켜 저장
+      function toggleTheme() {
+        // 앞쪽의 값이 null이라면 뒤쪽의 값이 current에 저장되고, 앞쪽에 값이 있다면 앞쪽의 값이 current에 저장된다.
+        const current = localStorage.getItem("theme") || "light";
+        const next = current === "light" ? "dark" : "light";
+        localStorage.setItem("theme", next);
+        applyTheme(next);
+      }
+
+      applyTheme(localStorage.getItem("theme") || "light");
+    </script>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IndexedDB</title>
+  </head>
+  <body>
+    <h2>📄 내 메모장</h2>
+    <input type="text" id="noteInput" placeholder="메모 입력" />
+    <button onclick="saveNote()">저장</button>
+    <ul id="noteList"></ul>
+
+    <script>
+      let db;
+
+      const request = indexedDB.open("MyNotesDB", 1);
+
+      request.onupgradeneeded = function (e) {
+        //이벤트 객체를 받아
+        db = e.target.result;
+        //db에 있다면 넣어 준다.
+        if (!db.objectStoreNames.contains("notes")) {
+          db.createObjectStore("notes", { keyPath: "id", autoIncrement: true }); //notes: 데이터 저장소 이름
+        }
+      };
+
+      //   읽어오는 데 성공했을 때
+      request.onsuccess = function (e) {
+        db = e.target.result;
+        //displayNotes();
+      };
+
+      //   읽어오는 것에 실패했을 때
+      request.onerror = function () {
+        alert("IndexedDB 열기 실패");
+      };
+
+      function displayNotes() {
+        const list = document.getElementById("noteList");
+        list.innerHTML = "";
+
+        const tx = db.transaction("notes", "readonly");
+        const store = tx.objectStore("notes");
+        const request = store.openCursor();
+
+        request.onsuccess = function (e) {
+          const cursor = e.target.result;
+          if (cursor) {
+            const li = document.createElement("li");
+            li.textContent = `[${cursor.value.created.toLocaleString()}]${
+              cursor.value.text
+            }`;
+            list.appendChild(li);
+            cursor.continue(); //첫 번째 데이터를 읽고, 다음 데이터를 가리킨다. (다음 데이터가 없다면 Null을 가리킨다.)
+          }
+        };
+      }
+
+      function saveNote() {
+        const input = document.getElementById("noteInput");
+        const text = input.value.trim();
+        if (!text) return;
+
+        const tx = db.transaction("notes", "readwrite");
+        const store = tx.objectStore("notes");
+        store.add({ text: text, created: new Date() });
+
+        tx.oncomplete = function () {
+          input.value = "";
+          displayNotes();
+        };
+      }
+    </script>
+  </body>
+</html>
