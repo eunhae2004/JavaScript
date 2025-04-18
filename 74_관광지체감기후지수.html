@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>관광지 체감기후지수</title>
+
+    <!-- 카카오맵 -->
+    <!-- 
+        <script>: 위->아래 순차적으로 실행한다. html과 함께 순서대로 처리.
+        <script defer>: DOM 요소 접근 오류 방지. 로딩 최적화. HTML이 모두 실행된 후 처리.
+    -->
+    <script
+      defer
+      type="text/javascript"
+      src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=a9edb392d3c533c55cbed94a9f15a533&autoload=false&libraries=services"
+      &autload="false"
+    ></script>
+
+    <link rel="stylesheet" href="./74_2_관광지체감기후지수.css" />
+  </head>
+  <body>
+    <h1>관광지 체감기후지수 + 지도</h1>
+
+    <label for="region">지역 선택: </label>
+    <select id="region">
+      <option value="서울 중구|1111000000">서울 중구</option>
+      <option value="부산 중구|2611000000">부산 중구</option>
+      <option value="대구 중구|2711000000">대구 중구</option>
+      <option value="인천 중구|2811000000">인천 중구</option>
+      <option value="광주 동구|2911000000">광주 동구</option>
+      <option value="대전 중구|3011000000">대전 중구</option>
+      <option value="울산 남구|3114000000">울산 남구</option>
+      <option value="세종|3611000000">세종</option>
+      <option value="강릉시|4215000000">강릉시</option>
+      <option value="청주시|4311000000">청주시</option>
+      <option value="전주시|4511000000">전주시</option>
+      <option value="목포시|4611000000">목포시</option>
+      <option value="창원시|4812000000">창원시</option>
+      <option value="제주 제주시|5011000000">제주 제주시</option>
+      <option value="제주 서귀포시|5013000000" selected>제주 서귀포시</option>
+    </select>
+
+    <button onclick="loadData()">조회하기</button>
+
+    <div id="weatherInfo">데이터를 불러오는 중입니다...</div>
+    <div id="map"></div>
+
+    <script>
+      let map;
+      let marker;
+
+      //   공공데이터 인증키 (디코딩)
+      const serviceKey =
+        "A9ruup0+HuAlhSzX3jYVqHIZVgnLR/jccmYUz+daVd4TZa0ezmMZxxmT3I8ribK/MQ5lEacBhH7YUrAm28fjyA=="; // URL 인코딩 X
+
+      function loadData() {
+        // 선택한 지역의 value를 가져온다.
+        const selected = document.getElementById("region").value;
+        // 제주 서귀포시|5013000000
+
+        // selected에 들어있는 값을 |를 기준으로 분할해 [, cityAreaId]에 담는다.
+        // cityAreaId = 5013000000
+        const [, cityAreaId] = selected.split("|");
+        const now = new Date();
+
+        // padStart(n, "n") 숫자를 2자릿수로 맞추고 남는 자리에는 "n"을 집어넣는다.
+        const CURRENT_DATE = `${now.getFullYear()}${String(
+          now.getMonth() + 1
+        ).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}00`;
+        const DAY = 3;
+
+        // [ Base URL: apis.data.go.kr/1360000/TourStnInfoService1 ]
+        // /getCityTourClmldx1
+
+        // https://apis.data.go.kr/1360000/TourStnInfoService1/getCityTourClmIdx1?ServiceKey=A9ruup0+HuAlhSzX3jYVqHIZVgnLR/jccmYUz+daVd4TZa0ezmMZxxmT3I8ribK/MQ5lEacBhH7YUrAm28fjyA==&pageNo=1&numOfRows=10&dataType=JSON&CURRENT_DATE=2025-04-18-16&DAY=3&CITY_AREA_ID=2611000000
+
+        // https://apis.data.go.kr/1360000/TourStnInfoService1/getCityTourClmIdx1?ServiceKey=A9ruup0%2BHuAlhSzX3jYVqHIZVgnLR%2FjccmYUz%2BdaVd4TZa0ezmMZxxmT3I8ribK%2FMQ5lEacBhH7YUrAm28fjyA%3D%3D&pageNo=1&numOfRows=10&dataType=JSON&CURRENT_DATE=2025-04-18-16&DAY=3&CITY_AREA_ID=2611000000
+
+        const url = `https://apis.data.go.kr/1360000/TourStnInfoService1/getCityTourClmIdx1?serviceKey=${encodeURIComponent(
+          serviceKey
+        )}&pageNo=1&numOfRows=10&dataType=JSON&CURRENT_DATE=${CURRENT_DATE}&DAY=${DAY}&CITY_AREA_ID=${cityAreaId}`;
+
+        console.log(url);
+
+        //   //  fetch 링크에 정상적인 접속이 된다면, then을 실행한다.
+        //   fetch("https://jsonplaceholder.typicode.com/todos/1")
+        //     .then((response) => {
+        //       // 문자열을 객체화 시킨다.
+        //       return response.json();
+        //     })
+        //     .then((data) => console.log(data.title));
+        //     //delectus aut autem
+        fetch(url)
+          .then((res) => res.json()) //응답을 받고 .json() 메소드로 파싱한 json()값을 리턴
+          .then((data) => {
+            // 객체화된 json값을 data에 담아 이용한다.
+            console.log("전체 응답 구조 확인:", JSON.stringify(data, null, 2)); //key, value, (2칸의 공백이 생긴다.)
+
+            // json 문자열 header와 body로 분리
+            const header = data.response?.header;
+            const body = data.response?.body;
+
+            //header의 resultCode가 00이 아니라면 (데이터가 없다면)
+            if (header?.resultCode !== "00") {
+              document.getElementById("weatherInfo").innerText =
+                "해당 지역의 데이터가 없습니다.";
+              return;
+            }
+
+            const items = body?.items?.item;
+
+            // body의 "items":{"item":[]} 안의 데이터가 없거나, 배열의 길이가 0일 때
+            if (!items || items.length === 0) {
+              document.getElementById("weatherInfo").innerText =
+                "해당 지역의 데이터가 없습니다.";
+              return;
+            }
+
+            let html = "";
+
+            // index를 체크하며 item만큼 반복한다.
+            items.forEach((item, index) => {
+              html += `
+              <strong>날짜:</strong> ${item.tm}<br>
+              <strong>지역:</strong> ${item.totalCityName}<br>
+              <strong>체감기후지수:</strong> ${item.kmaTci}<br>
+              <strong>등급:</strong>
+              <span class="grade ${item.TCI_GRADE}">${item.TCI_GRADE}</span>
+              <hr>
+            `;
+
+              // index가 0일 때 (해당 데이터를 처음 풀어본 한 번만) -> moveMapByCityName을 호출한다.
+              if (index === 0) {
+                moveMapByCityName(item.totalCityName);
+              }
+            });
+            //html 안에 저장한 JSON 값을 weatherInfo div 안에 넣어 준다.
+            document.getElementById("weatherInfo").innerHTML = html;
+          })
+
+          // 에러가 났을 떼
+          .catch((err) => {
+            console.error("fetch 실패 또는 파싱 오류:", err);
+            document.getElementById("weatherInfo").innerText =
+              "데이터 불러오기 실패";
+          });
+      }
+
+      //address에 들어오는 값: totalCityName
+      function moveMapByCityName(address) {
+        const geocoder = new kakao.maps.services.Geocoder();
+        geocoder.addressSearch(address, function (result, status) {
+          if (status === kakao.maps.services.Status.OK) {
+            const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+            map.setCenter(coords);
+            if (marker) marker.setMap(null);
+            marker = new kakao.maps.Marker({
+              map: map,
+              position: coords,
+            });
+          } else {
+            console.warn("주소를 찾을 수 없습니다:", address);
+          }
+        });
+      }
+
+      window.onload = function () {
+        kakao.maps.load(function () {
+          map = new kakao.maps.Map(document.getElementById("map"), {
+            center: new kakao.maps.LatLng(33.2539, 126.5596), // 서귀포시 초기 중심
+            level: 9,
+          });
+          loadData(); // 초기 로딩
+        });
+      };
+    </script>
+  </body>
+</html>
